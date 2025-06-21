@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consult Note Helper</title>
+    <link rel = "stylesheet" href = "style.css">
+</head>
+<body>
+    <div>
+        <label for = "settingInput">Type</label>
+        <input list = "listOfSettings" id = "settingInput">
+        <datalist id = "listOfSettings">
+            <option value = ""></option>
+            <option value = "Consultation Suivi"></option>
+            <option value = "Consultation NM"></option>
+            <option value = "Consultation HDJ"></option>
+        </datalist>
+    </div>
+
+    <div id = "contentBasedOnSetting">
+    </div>
+    
+    <div>
+        <div>
+            <p>Final</label>
+        </div>
+        <div>
+            <p id = "textOutput"></p>
+        </div>
+    </div>
+    
+    <div>
+        <button id = "okButton">OK</button>
+    </div>
+
+    <style src = "style.css"></style>
+    <script src = "stylingFunction.js"></script>
+    <script src = "convertExternalBiology.js"></script>
+    <script src = "generateLetterFollowUp.js"></script>
+    <script src = "generateLetterNewPatient.js"></script>
+    <script src = "main.js"></script>
+</body>
+</html>

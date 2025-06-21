@@ -1,0 +1,15 @@
+body{
+    width: 100dvw;
+    font: 'Trebuchet MS 10px';
+}
+
+textarea{
+    width: 95%;
+    height: 25px;
+}
+
+#textOutput{
+    width: 95%;
+    border: solid black 2px;
+    background-color: beige;
+}
