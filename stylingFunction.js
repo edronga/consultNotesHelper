@@ -10,6 +10,10 @@ function toBoldAndUpperCase(string){
     return r
 }
 
+function toBold(string){
+    return '<b>' + string + '</b>'
+}
+
 function initializeAllTagStyle(tag = 'textarea'){
     const objectOfTags = document.getElementsByTagName(tag)
     let keys = Object.keys(objectOfTags)

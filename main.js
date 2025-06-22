@@ -66,7 +66,8 @@ okButton.addEventListener('click', (e) =>{
 
                 return generateOutputNewPatient(intro, history, lifestyle, drugs, allergies, medicalHistory, gynecologicHistory, familyHistory, symptoms, exam, tests, geriatricEvaluation, synthesis, protocolDetails, others, nextAppointment) 
             }()
-            navigator.clipboard.writeText(output.innerHTML)
+            const clipboardItem = new ClipboardItem({'text/html': output.innerHTML})
+            navigator.clipboard.write(clipboardItem)
             break;
         case 'Consultation HDJ':
             break;

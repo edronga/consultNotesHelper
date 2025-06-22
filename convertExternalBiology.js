@@ -25,7 +25,9 @@ function convertExternalBiology(copyFromPdf){
     }()
     text = text.replaceAll('-', ' - ')
     text = text.replaceAll('−', ' - ')
-
+text = text.replaceAll('(', ' ( ')
+text = text.replaceAll(')', ' ) ')
+ 
     const delimiterRegex = /\s/g;
     text = text.replaceAll(delimiterRegex, delimiter)
     
@@ -72,6 +74,10 @@ function convertExternalBiology(copyFromPdf){
             unit: 'G/L'
         },
         'créatinine': {
+            code: 'Créatinine',
+            unit : 'µmol/L'
+        },
+'creatinine': {
             code: 'Créatinine',
             unit : 'µmol/L'
         },
@@ -143,6 +149,14 @@ function convertExternalBiology(copyFromPdf){
             code: 'LDH',
             unit : 'UI'
         },
+'l.d.h':{
+            code: 'LDH',
+            unit : 'UI'
+        },
+'l.d.h.':{
+            code: 'LDH',
+            unit : 'UI'
+        },
         'deshydrogénase':{
             code: 'LDH',
             unit : 'UI'
@@ -150,6 +164,10 @@ function convertExternalBiology(copyFromPdf){
         'lactate-déshydrogénase':{
             code: 'LDH',
             unit : 'UI'
+        },
+'crp':{
+            code: 'CRP',
+            unit : 'mg/L'
         },
         'réactive':{
             code: 'CRP',
@@ -160,11 +178,11 @@ function convertExternalBiology(copyFromPdf){
             unit : 'g/L'
         },
         'corrigée':{
-            code: 'calcémie',
+            code: 'Calcémie',
             unit : 'mmol/L'
         },
         'corrigé':{
-            code: 'calcémie',
+            code: 'Calcémie',
             unit : 'mmol/L'
         },
         'TSH':{
@@ -219,7 +237,7 @@ function convertExternalBiology(copyFromPdf){
         
         textInArrayFormat.forEach((value, index, array) =>{
             if (Object.keys(searchedWords).includes(value.toLowerCase())){
-                if (r[searchedWords[value.toLowerCase()]['code']] === undefined){
+                if (r[searchedWords[value.toLowerCase()]['code']] === undefined || r[searchedWords[value.toLowerCase()]['code']]['numericalValue'] === '' ){
                     r[searchedWords[value.toLowerCase()]['code']] = {
                     'numericalValue': '',
                     'unit' : searchedWords[value.toLowerCase()]['unit']
@@ -242,6 +260,7 @@ function convertExternalBiology(copyFromPdf){
                     }
                     return true
                 }()
+ 
                 if (condition){
                     if (r[currentValueBeingCompleted]['numericalValue'] === ''){
                         r[currentValueBeingCompleted]['numericalValue'] = value
@@ -259,6 +278,13 @@ function convertExternalBiology(copyFromPdf){
                     r[currentValueBeingCompleted]['upperBound'] = array[index + 1]
                     lookingForCompletion = false
                 }
+ 
+if (['<', '(<'].includes(value)){
+r[currentValueBeingCompleted]['upperBound'] = array[index + 1]
+if (r[currentValueBeingCompleted]['numericalValue'] !== ''){
+lookingForCompletion = false
+}
+}
  
                 counter++
                 if (counter === 100 || Object.keys(searchedWords).includes(array[index + 1].toLowerCase())){
@@ -334,8 +360,8 @@ const cleverCreat = creat < 20? Math.round(creat * CONVERSION_FACTOR): creat;
         }
         if (extractedData['Calcémie'] !== undefined){
             const calcemia = Number(extractedData['Calcémie']['numericalValue'])
-            const CONVERSION_FACTOR_CALCEMIA = 40.13
-const cleverCalcemia = calcemia <4? calcemia: (Math.round(calcemia / CONVERSION_FACTOR_CALCEMIA)).toFixed(2)
+            const CONVERSION_FACTOR_CALCEMIA = 0.0250495
+const cleverCalcemia = calcemia <4? calcemia: (calcemia * CONVERSION_FACTOR_CALCEMIA).toFixed(2);
             r = r + `, calcémie corrigée ${cleverCalcemia} µmol/L`
         }
         if (extractedData['Albumine'] !== undefined){
@@ -345,6 +371,14 @@ const cleverCalcemia = calcemia <4? calcemia: (Math.round(calcemia / CONVERSION_
         if (extractedData['TSH'] !== undefined){
             const tsh = extractedData['TSH']['numericalValue']
             r = r + `\nTSH ${albumine} g/L`
+        }
+if (extractedData['TSH'] !== undefined){
+            const tsh = extractedData['TSH']['numericalValue']
+            r = r + `\nTSH ${albumine} g/L`
+        }
+if (extractedData['CA 15-3'] !== undefined){
+            const ca153 = extractedData['CA 15-3']['numericalValue']
+            r = r + `\nCA 15-3 ${ca153} UI`
         }
  
         return r;

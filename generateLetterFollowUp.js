@@ -1,31 +1,34 @@
 'use strict'
-
+ 
 /*
 *
 *
 *
 */
-
+ 
 function generateOutputFollowUp(intro = '', history = '', drugs = '', sinceLastTime = '', symptoms = '', exam = '', imagingtests = '', biology = '', synthesis = '', others = '', nextAppointment = ''){
     let r = ''
     const underline = '<br/>'
     const breakLine = '<br/><br/>'
-
-    r = intro + breakLine
+ 
+    r = convertLineBreakstoHtml(intro) + breakLine
     if (history !== ''){r = r + style.subTitle('historique :') + underline + convertLineBreakstoHtml(history) + breakLine}
     if (drugs !== ''){r = r + style.subTitle('traitements :') + underline + convertLineBreakstoHtml(drugs) + breakLine}
     if (sinceLastTime !== ''){r = r + style.subTitle('depuis la dernière consultation :') + underline + convertLineBreakstoHtml(sinceLastTime) + breakLine}
     if (symptoms !== ''){r = r + style.subTitle('evaluation symptomatique :') + underline + convertLineBreakstoHtml(symptoms) + breakLine}
     if (exam !== ''){r = r + style.subTitle('examen clinique :') + underline + convertLineBreakstoHtml(exam) + breakLine}
     if (imagingtests !== ''){r = r + style.subTitle('Examens Complementaires :') + underline + '-' + convertLineBreakstoHtml(imagingtests) + underline}
-    if (biology!== ''){r = r + convertLineBreakstoHtml(biology) + breakLine}
+    if (biology!== ''){
+if (imagingtests == '') {r = r + style.subTitle('Examens Complementaires :') + underline}
+r = r + convertLineBreakstoHtml(biology) + breakLine
+}
     if (synthesis !== ''){r = r + style.subTitle('synthese :') + underline + convertLineBreakstoHtml(synthesis) + breakLine}
     if (others !== ''){r = r + style.subTitle('par ailleurs:') + underline + convertLineBreakstoHtml(others) + breakLine}
     if (nextAppointment !== ''){r = r + style.subTitle('prochain(s) rendez-vous :') + underline + convertLineBreakstoHtml(nextAppointment) + breakLine}
-
+ 
     return r;
 }
-
+ 
 /*
 *
 *
@@ -33,7 +36,7 @@ function generateOutputFollowUp(intro = '', history = '', drugs = '', sinceLastT
 */
 function generateContentBasedOnSetting_FollowUp (){
     let r = document.createElement('div')
-
+ 
     const htmlText = `
     <div>
         <label for ="introSex">Mr/Mme....</label>
@@ -100,17 +103,17 @@ function generateContentBasedOnSetting_FollowUp (){
     </div>
     `
     r.innerHTML = htmlText
-
+ 
     const textareaTag = r.getElementsByTagName('textarea')
     let keys = Object.keys(textareaTag)
     keys.forEach((value) =>{
-        textareaTag[value].addEventListener('selectionchange', (e) =>{
+        textareaTag[value].addEventListener('selectijava-script', (e) =>{
             const numberOfLines = 15
             initializeAllTagStyle('textarea')
             textareaTag[value].style.height = `${numberOfLines * 10}px`
         })
     })
-
+ 
     r.querySelector('#introSex').addEventListener('keydown', (e) =>{
         if (e.key !== 'Tab'){
             return
@@ -169,13 +172,13 @@ function generateContentBasedOnSetting_FollowUp (){
         const length =  document.getElementById('introInput').value.length
         document.getElementById('introInput').setSelectionRange(length, length)
     })
-
+ 
     r.querySelector('#biologyInput').addEventListener('keydown', (e) =>{
         if (e.key === 'Enter'){
             const biology = document.getElementById('biologyInput')
             biology.value = convertExternalBiology(biology.value)
         }  
     })
-
+ 
     return r;
 }
