@@ -43,7 +43,7 @@ okButton.addEventListener('click', (e) =>{
 
                 return generateOutputFollowUp(intro, history, drugs, sinceLastTime, symptoms, exam, imagingTests, biology, synthesis, others, nextAppointment)
             }()
-            
+            navigator.clipboard.writeText(output.innerHTML)
             break;
         case 'Consultation NM':
             output.innerHTML = function (){
@@ -66,6 +66,7 @@ okButton.addEventListener('click', (e) =>{
 
                 return generateOutputNewPatient(intro, history, lifestyle, drugs, allergies, medicalHistory, gynecologicHistory, familyHistory, symptoms, exam, tests, geriatricEvaluation, synthesis, protocolDetails, others, nextAppointment) 
             }()
+            navigator.clipboard.writeText(output.innerHTML)
             break;
         case 'Consultation HDJ':
             break;

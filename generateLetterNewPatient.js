@@ -149,7 +149,7 @@ function generateContentBasedOnSetting_NewPatient (){
             return
         }
         const name = document.getElementById('firstNameInput').value
-        const newString = document.getElementById('introInput').innerHTML.replace('*Nom*', name.toUpperCase())
+        const newString = document.getElementById('introInput').innerHTML.replace('*Nom*', toBold(name.toUpperCase()))
         document.getElementById('introInput').innerHTML = newString
     })
     r.querySelector('#lastNameInput').addEventListener('keydown', (e) =>{
@@ -157,15 +157,40 @@ function generateContentBasedOnSetting_NewPatient (){
             return
         }
         const name = document.getElementById('lastNameInput').value
-        const newString = document.getElementById('introInput').innerHTML.replace('*Prénom*', name.toUpperCase())
+        const newString = document.getElementById('introInput').innerHTML.replace('*Prénom*', toBold(name.toUpperCase()))
         document.getElementById('introInput').innerHTML = newString
     })
     r.querySelector('#ageInput').addEventListener('keydown', (e) =>{
         if (e.key !== 'Tab'){
             return
         }
-        const age = document.getElementById('ageInput').value
-        const newString = document.getElementById('introInput').innerHTML.replace('*Age*', age)
+        const age = function () {
+            const n = document.getElementById('ageInput').value
+            if (n.length === 2){
+                return n;
+            }
+            if (n.length === 8){
+                return function(){
+                    const currentDate = new Date()
+                    let age = currentDate.getFullYear() - Number(n.slice(4, 8))
+                    if (currentDate.getMonth() + 1 < Number(n.slice(2, 4))){
+                        return age - 1;
+                    }
+                    if (currentDate.getMonth() + 1 > Number(n.slice(2, 4))){
+                        return age;
+                    }
+                    if (currentDate.getDate() < Number(n.slice(0, 2))){
+                        return age - 1;
+                    }
+                    if (currentDate.getDate() >= Number(n.slice(0, 2))){
+                        return age;
+                    }
+                }()
+            }
+            return '??'
+        }()
+            
+        const newString = document.getElementById('introInput').innerHTML.replace('*Age* ans', toBold(age + ' ans'))
         document.getElementById('introInput').innerHTML = newString
         const length =  document.getElementById('introInput').value.length
         document.getElementById('introInput').setSelectionRange(length, length)

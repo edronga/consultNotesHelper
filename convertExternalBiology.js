@@ -1,19 +1,19 @@
 'use strict'
-
+ 
 /*
 *
 *
 *
 */
-
+ 
 function convertExternalBiology(copyFromPdf){
     let text = copyFromPdf
-
+ 
     const delimiter = '|'
     if (text.includes(delimiter)){
         console.log ('warning: source text includes delimiter |')
     }
-
+ 
     text = function (){
         let t = text
         let c = ''
@@ -23,11 +23,13 @@ function convertExternalBiology(copyFromPdf){
         }
         return t
     }()
+    text = text.replaceAll('-', ' - ')
+    text = text.replaceAll('−', ' - ')
 
     const delimiterRegex = /\s/g;
     text = text.replaceAll(delimiterRegex, delimiter)
     
-
+ 
     const textInArrayFormat = function (){
         let r = []
         let currentWord = ''
@@ -42,14 +44,18 @@ function convertExternalBiology(copyFromPdf){
             }
         }
         r.push(currentWord)
-
+ 
         return r
     }()
-
+ 
     /*debugging */ console.log(textInArrayFormat)
-
+ 
     const searchedWords = {
         'prélevé' : {
+            code : 'date',
+            unit : ''
+        },
+        'prélèvement':  {
             code : 'date',
             unit : ''
         },
@@ -70,6 +76,10 @@ function convertExternalBiology(copyFromPdf){
             unit : 'µmol/L'
         },
         'ckd-epi': {
+            code: 'DFG',
+            unit : 'mL/min'
+        },
+        'ckd−epi': {
             code: 'DFG',
             unit : 'mL/min'
         },
@@ -109,11 +119,23 @@ function convertExternalBiology(copyFromPdf){
             code: 'GGT',
             unit : 'UI'
         },
+        '(gamma':{
+            code: 'GGT',
+            unit : 'UI'
+        },
+        'ggt':{
+            code: 'GGT',
+            unit : 'UI'
+        },
         'gamma-glutamyl':{
             code: 'GGT',
             unit : 'UI'
         },
         'phosphatases':{
+            code: 'PAL',
+            unit : 'UI'
+        },
+        'phosphatase':{
             code: 'PAL',
             unit : 'UI'
         },
@@ -138,6 +160,10 @@ function convertExternalBiology(copyFromPdf){
             unit : 'g/L'
         },
         'corrigée':{
+            code: 'calcémie',
+            unit : 'mmol/L'
+        },
+        'corrigé':{
             code: 'calcémie',
             unit : 'mmol/L'
         },
@@ -183,13 +209,13 @@ function convertExternalBiology(copyFromPdf){
         },
         
     }
-
+ 
     const extractedData = function (){
         let r = {}
         let currentValueBeingCompleted = ''
         let lookingForCompletion = false
         let counter = 0
-
+ 
         
         textInArrayFormat.forEach((value, index, array) =>{
             if (Object.keys(searchedWords).includes(value.toLowerCase())){
@@ -208,7 +234,7 @@ function convertExternalBiology(copyFromPdf){
                     if (array[index +1] === '%'){
                         return false
                     }
-                    const temp = ['1','2','3','4','5','6','7','8','9','0',',','/']
+                    const temp = ['1','2','3','4','5','6','7','8','9','0',',','.','/','-','−']
                     for (let i = 0; i <value.length; i++){
                         if (!temp.includes(value[i])){
                             return false
@@ -227,13 +253,13 @@ function convertExternalBiology(copyFromPdf){
                         r[currentValueBeingCompleted]['upperBound'] = value
                     }  
                 }
-
+ 
                 if (['-', 'à'].includes(value)){
                     r[currentValueBeingCompleted]['lowerBound'] = array[index - 1]
                     r[currentValueBeingCompleted]['upperBound'] = array[index + 1]
                     lookingForCompletion = false
                 }
-
+ 
                 counter++
                 if (counter === 100 || Object.keys(searchedWords).includes(array[index + 1].toLowerCase())){
                     lookingForCompletion = false
@@ -241,22 +267,25 @@ function convertExternalBiology(copyFromPdf){
                 }
             }
         })
-
+ 
         return r
     }()
-
+ 
     /*debugging */ console.log(extractedData)
     Object.keys(extractedData).forEach((value) =>{
         if (extractedData[value]['numericalValue'] === undefined) {return;}
         extractedData[value]['numericalValue'] = extractedData[value]['numericalValue'].replaceAll(',', '.')
     })
-
-
+ 
+ 
     const finalOutput = function(){
         let r = ''
         
         if (extractedData['date'] !== undefined){
-            r = '<b>' + '- BILAN BIOLOGIQUE DU ' + extractedData['date']['numericalValue']+ ' :' + '</b>' + '\n'
+let date = extractedData['date']['numericalValue']
+date = date.replaceAll('-', '/')
+date = date.replaceAll('−', '/')
+            r = '<b>' + '- BILAN BIOLOGIQUE DU ' + date + ' :' + '</b>' + '\n'
         }
         if (extractedData['Hb'] !== undefined){
         const hb = extractedData['Hb']['numericalValue']
@@ -268,7 +297,8 @@ function convertExternalBiology(copyFromPdf){
             const creat = Number(extractedData['Créatinine']['numericalValue'])
             const dfg = extractedData['DFG']['numericalValue']
             const CONVERSION_FACTOR = 8.84
-            r = r + `\nCréatinine ${Math.round(creat * CONVERSION_FACTOR)} µmol/L, DFG ${dfg} mL/min`
+const cleverCreat = creat < 20? Math.round(creat * CONVERSION_FACTOR): creat;
+            r = r + `\nCréatinine ${cleverCreat} µmol/L, DFG ${dfg} mL/min`
         }
         if (extractedData['Bilirubine'] !== undefined){
             let alat = '??'
@@ -292,7 +322,7 @@ function convertExternalBiology(copyFromPdf){
             if (extractedData['LDH']!== undefined){
                 ldh = (Number(extractedData['LDH']['numericalValue']) <= Number(extractedData['LDH']['upperBound']))? '': (Number(extractedData['LDH']['numericalValue']) / Number(extractedData['LDH']['upperBound'])).toFixed(1)
             }
-            r = r + `\nBilan hépatique : ALAT ${alat}N, ASAT ${asat}N, bilirubine ${bili}N, gGT ${ggt}N, PAL ${pal}N ; LDH ${ldh}N`
+            r = r + `\nBilan hépatique : ALAT ${alat}N, ASAT ${asat}N, bilirubine ${bili}N, GGT ${ggt}N, PAL ${pal}N ; LDH ${ldh}N`
         }
         if (extractedData['Glycémie'] !== undefined){
             const glycemie = extractedData['Glycémie']['numericalValue']
@@ -304,8 +334,9 @@ function convertExternalBiology(copyFromPdf){
         }
         if (extractedData['Calcémie'] !== undefined){
             const calcemia = Number(extractedData['Calcémie']['numericalValue'])
-            const CONVERSION_FACTOR_CALCEMIA = 25
-            r = r + `, calcémie corrigée ${calcemia * CONVERSION_FACTOR_CALCEMIA} µmol/L`
+            const CONVERSION_FACTOR_CALCEMIA = 40.13
+const cleverCalcemia = calcemia <4? calcemia: (Math.round(calcemia / CONVERSION_FACTOR_CALCEMIA)).toFixed(2)
+            r = r + `, calcémie corrigée ${cleverCalcemia} µmol/L`
         }
         if (extractedData['Albumine'] !== undefined){
             const albumine = extractedData['Albumine']['numericalValue']
@@ -315,10 +346,10 @@ function convertExternalBiology(copyFromPdf){
             const tsh = extractedData['TSH']['numericalValue']
             r = r + `\nTSH ${albumine} g/L`
         }
-
+ 
         return r;
     }()
     
-
+ 
     return finalOutput;
 }
