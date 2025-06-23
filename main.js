@@ -43,7 +43,7 @@ okButton.addEventListener('click', (e) =>{
 
                 return generateOutputFollowUp(intro, history, drugs, sinceLastTime, symptoms, exam, imagingTests, biology, synthesis, others, nextAppointment)
             }()
-            navigator.clipboard.writeText(output.innerHTML)
+            copyHtmlToClipboard(output.innerHTML)
             break;
         case 'Consultation NM':
             output.innerHTML = function (){
@@ -67,7 +67,7 @@ okButton.addEventListener('click', (e) =>{
                 return generateOutputNewPatient(intro, history, lifestyle, drugs, allergies, medicalHistory, gynecologicHistory, familyHistory, symptoms, exam, tests, geriatricEvaluation, synthesis, protocolDetails, others, nextAppointment) 
             }()
             const clipboardItem = new ClipboardItem({'text/html': output.innerHTML})
-            navigator.clipboard.write(clipboardItem)
+            copyHtmlToClipboard(output.innerHTML)
             break;
         case 'Consultation HDJ':
             break;
@@ -75,3 +75,13 @@ okButton.addEventListener('click', (e) =>{
             break;
     }
 })
+
+function copyHtmlToClipboard(htmlText){
+    const clipboardItem = new ClipboardItem({
+        'text/html': new Blob([htmlText], {type: 'text/html'}),
+        'text/plain': new Blob([htmlText], {type: 'text/plain'})
+    })
+    navigator.clipboard.write([clipboardItem])
+
+    return
+}
