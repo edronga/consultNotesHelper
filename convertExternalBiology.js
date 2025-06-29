@@ -7,50 +7,79 @@
 */
  
 function convertExternalBiology(copyFromPdf){
-    let text = copyFromPdf
- 
-    const delimiter = '|'
-    if (text.includes(delimiter)){
-        console.log ('warning: source text includes delimiter |')
-    }
- 
-    text = function (){
-        let t = text
-        let c = ''
-        for (let i = 100; i > 1; i--){
-            c = '.'.repeat(i)
-            t = t.replaceAll(c, ' ')
+
+    const text = purifyText(copyFromPdf)
+    function purifyText (copyFromPdf){
+        let r = copyFromPdf
+        r = function (){
+            let t = r
+            let c = ''
+            for (let i = 100; i > 1; i--){
+                c = '.'.repeat(i)
+                t = t.replaceAll(c, ' ')
+            }
+            return t
+        }()
+        r = r.replaceAll('15-3', 'CA15.3')
+        r = r.replaceAll('19-9', 'CA19.9')
+        r = r.replaceAll('(1)', '')
+        r = r.replaceAll('-', ' - ')
+        r = r.replaceAll('−', ' - ')
+        r = r.replaceAll('(', ' ( ')
+        r = r.replaceAll(')', ' ) ')
+
+        const delimiter = '|'
+        if (r.includes(delimiter)){
+            console.log ('warning: source text includes delimiter |')
         }
-        return t
-    }()
-    text = text.replaceAll('-', ' - ')
-    text = text.replaceAll('−', ' - ')
-text = text.replaceAll('(', ' ( ')
-text = text.replaceAll(')', ' ) ')
- 
-    const delimiterRegex = /\s/g;
-    text = text.replaceAll(delimiterRegex, delimiter)
+        const delimiterRegex = /\s/g;
+        r = r.replaceAll(delimiterRegex, delimiter)
+        
+        return r;
+    }
     
- 
-    const textInArrayFormat = function (){
+    const textInArrayFormat = convertTextInArrayFormart(text)
+    function convertTextInArrayFormart(text, delimiter = '|'){
         let r = []
         let currentWord = ''
         for (let i = 0, currentChar = ''; i < text.length; i++){
             currentChar = text[i]
             if (currentChar === delimiter){
-                r.push(currentWord)
+                if (currentWord !== ''){
+                    r.push(currentWord)
+                }
                 currentWord = ''
             }
             else {
                 currentWord = currentWord + currentChar
             }
         }
-        r.push(currentWord)
+        if (currentWord !== ''){
+            r.push(currentWord)
+        }
  
         return r
-    }()
+    }
+	
+	/*debugging */ console.log(textInArrayFormat)
+	
+	const textInArrayFormat_Modified = function(textArr = textInArrayFormat){
+		let counter = 0
+		let tracer = 0
+		for (let i = 0; i < textArr.length; i++){
+			if (textArr[i].toLowerCase() === 'albumine'){
+				if (counter === 1){
+				textArr[tracer] = 'NotReallyAlbumine'
+				return textArr
+				}
+				counter++
+				tracer = i
+			}
+		}
+		return textArr
+	}()
  
-    /*debugging */ console.log(textInArrayFormat)
+
  
     const searchedWords = {
         'prélevé' : {
@@ -77,15 +106,15 @@ text = text.replaceAll(')', ' ) ')
             code: 'Créatinine',
             unit : 'µmol/L'
         },
-'creatinine': {
+        'creatinine': {
             code: 'Créatinine',
             unit : 'µmol/L'
         },
-        'ckd-epi': {
+		'ckd': {
             code: 'DFG',
             unit : 'mL/min'
         },
-        'ckd−epi': {
+		'epi': {
             code: 'DFG',
             unit : 'mL/min'
         },
@@ -125,15 +154,7 @@ text = text.replaceAll(')', ' ) ')
             code: 'GGT',
             unit : 'UI'
         },
-        '(gamma':{
-            code: 'GGT',
-            unit : 'UI'
-        },
         'ggt':{
-            code: 'GGT',
-            unit : 'UI'
-        },
-        'gamma-glutamyl':{
             code: 'GGT',
             unit : 'UI'
         },
@@ -149,11 +170,11 @@ text = text.replaceAll(')', ' ) ')
             code: 'LDH',
             unit : 'UI'
         },
-'l.d.h':{
+        'l.d.h':{
             code: 'LDH',
             unit : 'UI'
         },
-'l.d.h.':{
+        'l.d.h.':{      
             code: 'LDH',
             unit : 'UI'
         },
@@ -161,11 +182,11 @@ text = text.replaceAll(')', ' ) ')
             code: 'LDH',
             unit : 'UI'
         },
-        'lactate-déshydrogénase':{
+        'déshydrogénase':{
             code: 'LDH',
             unit : 'UI'
-        },
-'crp':{
+        },    
+        'crp':{
             code: 'CRP',
             unit : 'mg/L'
         },
@@ -205,7 +226,7 @@ text = text.replaceAll(')', ' ) ')
             code: 'Glycémie',
             unit : 'g/L'
         },
-        '15-3':{
+        'CA15.3':{
             code: 'CA 15-3',
             unit : 'UI'
         },
@@ -221,21 +242,22 @@ text = text.replaceAll(')', ' ) ')
             code: 'ACE',
             unit : 'UI'
         },
-        '19-9':{
+        'CA19.9':{
             code: 'CA 19-9',
             unit : 'UI'
         },
         
     }
  
-    const extractedData = function (){
+    const extractedData = extractDataFrom(textInArrayFormat_Modified)
+    function extractDataFrom(textInArrayFormat_Modified){
         let r = {}
         let currentValueBeingCompleted = ''
         let lookingForCompletion = false
         let counter = 0
  
         
-        textInArrayFormat.forEach((value, index, array) =>{
+        textInArrayFormat_Modified.forEach((value, index, array) =>{
             if (Object.keys(searchedWords).includes(value.toLowerCase())){
                 if (r[searchedWords[value.toLowerCase()]['code']] === undefined || r[searchedWords[value.toLowerCase()]['code']]['numericalValue'] === '' ){
                     r[searchedWords[value.toLowerCase()]['code']] = {
@@ -245,6 +267,7 @@ text = text.replaceAll(')', ' ) ')
                     currentValueBeingCompleted = searchedWords[value.toLowerCase()]['code']
                     lookingForCompletion = true
                 }
+				
             }
             
             if (lookingForCompletion){
@@ -252,7 +275,7 @@ text = text.replaceAll(')', ' ) ')
                     if (array[index +1] === '%'){
                         return false
                     }
-                    const temp = ['1','2','3','4','5','6','7','8','9','0',',','.','/','-','−']
+                    const temp = ['1','2','3','4','5','6','7','8','9','0',',','.','/']
                     for (let i = 0; i <value.length; i++){
                         if (!temp.includes(value[i])){
                             return false
@@ -276,41 +299,47 @@ text = text.replaceAll(')', ' ) ')
                 if (['-', 'à'].includes(value)){
                     r[currentValueBeingCompleted]['lowerBound'] = array[index - 1]
                     r[currentValueBeingCompleted]['upperBound'] = array[index + 1]
-                    lookingForCompletion = false
+                    if (r[currentValueBeingCompleted]['numericalValue'] !== ''){
+                        lookingForCompletion = false
+                    }
                 }
  
-if (['<', '(<'].includes(value)){
-r[currentValueBeingCompleted]['upperBound'] = array[index + 1]
-if (r[currentValueBeingCompleted]['numericalValue'] !== ''){
-lookingForCompletion = false
-}
-}
- 
+                if (['<'].includes(value)){
+                    r[currentValueBeingCompleted]['upperBound'] = array[index + 1]
+                    if (r[currentValueBeingCompleted]['numericalValue'] !== ''){
+                        lookingForCompletion = false
+                    }
+                }
+                /*
                 counter++
                 if (counter === 100 || Object.keys(searchedWords).includes(array[index + 1].toLowerCase())){
                     lookingForCompletion = false
                     counter = 0
                 }
+                    */
             }
+        })
+
+        Object.keys(r).forEach((value) =>{
+        if (r[value]['numericalValue'] === undefined) {return;}
+        r[value]['numericalValue'] = r[value]['numericalValue'].replaceAll(',', '.')
         })
  
         return r
-    }()
+    }
  
     /*debugging */ console.log(extractedData)
-    Object.keys(extractedData).forEach((value) =>{
-        if (extractedData[value]['numericalValue'] === undefined) {return;}
-        extractedData[value]['numericalValue'] = extractedData[value]['numericalValue'].replaceAll(',', '.')
-    })
+    
  
  
-    const finalOutput = function(){
+    const finalOutput = convertExtractedDataToFinalOutput(extractedData)
+    function convertExtractedDataToFinalOutput(extractedData){
         let r = ''
         
         if (extractedData['date'] !== undefined){
-let date = extractedData['date']['numericalValue']
-date = date.replaceAll('-', '/')
-date = date.replaceAll('−', '/')
+            let date = extractedData['date']['numericalValue']
+            date = date.replaceAll('-', '/')
+            date = date.replaceAll('−', '/')
             r = '<b>' + '- BILAN BIOLOGIQUE DU ' + date + ' :' + '</b>' + '\n'
         }
         if (extractedData['Hb'] !== undefined){
@@ -323,7 +352,7 @@ date = date.replaceAll('−', '/')
             const creat = Number(extractedData['Créatinine']['numericalValue'])
             const dfg = extractedData['DFG']['numericalValue']
             const CONVERSION_FACTOR = 8.84
-const cleverCreat = creat < 20? Math.round(creat * CONVERSION_FACTOR): creat;
+            const cleverCreat = creat < 20? Math.round(creat * CONVERSION_FACTOR): creat;
             r = r + `\nCréatinine ${cleverCreat} µmol/L, DFG ${dfg} mL/min`
         }
         if (extractedData['Bilirubine'] !== undefined){
@@ -361,7 +390,7 @@ const cleverCreat = creat < 20? Math.round(creat * CONVERSION_FACTOR): creat;
         if (extractedData['Calcémie'] !== undefined){
             const calcemia = Number(extractedData['Calcémie']['numericalValue'])
             const CONVERSION_FACTOR_CALCEMIA = 0.0250495
-const cleverCalcemia = calcemia <4? calcemia: (calcemia * CONVERSION_FACTOR_CALCEMIA).toFixed(2);
+            const cleverCalcemia = calcemia <4? calcemia: (calcemia * CONVERSION_FACTOR_CALCEMIA).toFixed(2);
             r = r + `, calcémie corrigée ${cleverCalcemia} µmol/L`
         }
         if (extractedData['Albumine'] !== undefined){
@@ -372,17 +401,17 @@ const cleverCalcemia = calcemia <4? calcemia: (calcemia * CONVERSION_FACTOR_CALC
             const tsh = extractedData['TSH']['numericalValue']
             r = r + `\nTSH ${albumine} g/L`
         }
-if (extractedData['TSH'] !== undefined){
+        if (extractedData['TSH'] !== undefined){
             const tsh = extractedData['TSH']['numericalValue']
             r = r + `\nTSH ${albumine} g/L`
         }
-if (extractedData['CA 15-3'] !== undefined){
+        if (extractedData['CA 15-3'] !== undefined){
             const ca153 = extractedData['CA 15-3']['numericalValue']
             r = r + `\nCA 15-3 ${ca153} UI`
         }
  
         return r;
-    }()
+    }
     
  
     return finalOutput;

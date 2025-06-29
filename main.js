@@ -41,8 +41,9 @@ okButton.addEventListener('click', (e) =>{
                 const others = document.getElementById('othersInput').value
                 const nextAppointment = document.getElementById('nextAppointmentInput').value
 
-                return generateOutputFollowUp(intro, history, drugs, sinceLastTime, symptoms, exam, imagingTests, biology, synthesis, others, nextAppointment)
-            }()
+                let r = generateOutputFollowUp(intro, history, drugs, sinceLastTime, symptoms, exam, imagingTests, biology, synthesis, others, nextAppointment)
+				return correctShortCuts(r)
+			}()
             copyHtmlToClipboard(output.innerHTML)
             break;
         case 'Consultation NM':
@@ -64,7 +65,8 @@ okButton.addEventListener('click', (e) =>{
                 const others = document.getElementById('othersInput').value
                 const nextAppointment = document.getElementById('nextAppointmentInput').value
 
-                return generateOutputNewPatient(intro, history, lifestyle, drugs, allergies, medicalHistory, gynecologicHistory, familyHistory, symptoms, exam, tests, geriatricEvaluation, synthesis, protocolDetails, others, nextAppointment) 
+				let r = generateOutputNewPatient(intro, history, lifestyle, drugs, allergies, medicalHistory, gynecologicHistory, familyHistory, symptoms, exam, tests, geriatricEvaluation, synthesis, protocolDetails, others, nextAppointment)
+				return correctShortCuts(r)			
             }()
             const clipboardItem = new ClipboardItem({'text/html': output.innerHTML})
             copyHtmlToClipboard(output.innerHTML)
@@ -85,3 +87,4 @@ function copyHtmlToClipboard(htmlText){
 
     return
 }
+

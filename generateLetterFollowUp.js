@@ -107,7 +107,7 @@ function generateContentBasedOnSetting_FollowUp (){
     const textareaTag = r.getElementsByTagName('textarea')
     let keys = Object.keys(textareaTag)
     keys.forEach((value) =>{
-        textareaTag[value].addEventListener('selectijava-script', (e) =>{
+        textareaTag[value].addEventListener('selectionchange', (e) =>{
             const numberOfLines = 15
             initializeAllTagStyle('textarea')
             textareaTag[value].style.height = `${numberOfLines * 10}px`
